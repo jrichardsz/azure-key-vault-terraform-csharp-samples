@@ -59,5 +59,5 @@ resource "azurerm_key_vault_secret" "vmpassword" {
   name         = "vmpassword"
   value        = random_password.vmpassword.result
   key_vault_id = azurerm_key_vault.kv1.id
-  depends_on   = [azurerm_key_vault.kv1]
+  depends_on   = [azurerm_key_vault_access_policy.for_logged_in_user]
 }
