@@ -1,30 +1,46 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the MIT License. See License.txt in the project root for license information.
-
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net;
+﻿using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
 
 namespace FunctionApp
 {
     public class HttpTriggerSimple
     {
-        [Function(nameof(HttpTriggerSimple))]
-        public HttpResponseData Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequestData req, FunctionContext executionContext)
+        [Function("read-secret")]
+        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req,
+            FunctionContext executionContext)
         {
             var logger = executionContext.GetLogger("FunctionApp.HttpTriggerSimple");
-            logger.LogInformation("Message logged");
+            logger.LogInformation("Starting secret read");
 
-            var response = req.CreateResponse(HttpStatusCode.OK);
+            if (String.IsNullOrEmpty(req.Query["name"]))
+            {
+                return new OkObjectResult("name is required as query param");
+            }
 
-            response.Headers.Add("Date", "Mon, 18 Jul 2016 16:06:00 GMT");
-            response.Headers.Add("Content-Type", "text/html; charset=utf-8");
-            response.WriteString("Hello world!");
+            string keyVaultName = Environment.GetEnvironmentVariable("KEY_VAULT_NAME");
+            var kvUri = "https://" + keyVaultName + ".vault.azure.net";
 
-            return response;
+            try
+            {
+                var client = new SecretClient(new Uri(kvUri), new DefaultAzureCredential());
+                KeyVaultSecret secret = await client.GetSecretAsync(req.Query["name"]);
+                logger.LogInformation(secret.Value);
+                return new OkObjectResult(secret.Value);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to read secret.");
+                return new OkObjectResult($"Secret was not found");
+            }
+
+
         }
+
     }
 }

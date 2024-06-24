@@ -16,6 +16,7 @@ resource "random_id" "kvname" {
 
 #Keyvault Creation
 data "azurerm_client_config" "current" {}
+
 resource "azurerm_key_vault" "kv1" {
   depends_on                  = [azurerm_resource_group.rg1]
   name                        = random_id.kvname.hex
@@ -28,7 +29,7 @@ resource "azurerm_key_vault" "kv1" {
 
   sku_name = "standard"
 
-  access_policy {
+/*   access_policy {
     tenant_id = data.azurerm_client_config.current.tenant_id
     object_id = data.azurerm_client_config.current.object_id
 
@@ -43,7 +44,25 @@ resource "azurerm_key_vault" "kv1" {
     storage_permissions = [
       "Get",
     ]
-  }
+  } */
+}
+
+resource "azurerm_key_vault_access_policy" "for_logged_in_user" {
+  key_vault_id = azurerm_key_vault.kv1.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azurerm_client_config.current.object_id
+
+    key_permissions = [
+      "Get",
+    ]
+
+    secret_permissions = [
+      "Get", "Backup", "Delete", "List", "Purge", "Recover", "Restore", "Set",
+    ]
+
+    storage_permissions = [
+      "Get",
+    ]
 }
 
 #Create KeyVault VM password

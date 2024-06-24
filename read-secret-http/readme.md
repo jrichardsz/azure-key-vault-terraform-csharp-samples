@@ -10,13 +10,9 @@ So, you could use this starter to create your own function with dotnet-isolated 
 
 - clone
 - open in visual studio <= 2022
+- Start the mocks
 - Run
 - Test
-
-```
-curl http://localhost:7234/api/HttpTriggerSimple
-```
-
 
 ## Azure Steps
 
@@ -31,7 +27,7 @@ With this steps you will be able to deploy your function into a real azure subsc
 **Steps**
 
 ```
-docker run -it -v $(pwd):/sandbox jrichardsz/azure-cli-terraform-dotnet:apine-3.19.1-azcli-2.61.0
+docker run -it -v $(pwd):/sandbox jrichardsz/azure-cli-terraform-dotnet:apine-3.19.1-azcli-2.61.0-dotnet-8
 
 az login
 
@@ -48,20 +44,30 @@ terraform plan && terraform apply -auto-approve
 
 If no errors you will see these in your azure web console
 
-![alt text](docs/image.png)
+![alt text](./docs/all_resources.png)
 
-The public url of your function should be: https://func-linux-poc-dev.azurewebsites.net
 
-![alt text](docs/image-1.png)
+## Tests
 
-Then if you perform a get request (with curl or a web browser) to this url `https://func-linux-poc-dev.azurewebsites.net/api/HttpTriggerSimple` you will get this as response:
-
-![alt text](docs/image-2.png)
-
-### :warning: Destroy :warning:
+For locahost
 
 ```
-terraform apply -destroy
+curl http://localhost:7234/api/read-secret?name=vmpassword
+```
+
+or with your function url
+
+```
+curl https://func-foo-bar-dev.azurewebsites.net/api/read-secret?name=vmpassword
+```
+
+Result should be the secret value
+
+
+## :warning: Destroy :warning:
+
+```
+terraform apply -destroy  -auto-approve
 ```
 
 https://github.com/chatoninthecloud/azure-function-key-vault/tree/master

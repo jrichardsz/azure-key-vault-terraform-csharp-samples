@@ -33,12 +33,16 @@ resource "azurerm_windows_function_app" "azure_function" {
   storage_account_name        = azurerm_storage_account.apps_storage.name
   storage_account_access_key  = azurerm_storage_account.apps_storage.primary_access_key
   service_plan_id             = azurerm_service_plan.func_apps.id
+  identity {
+      type = "SystemAssigned"
+  }
     
   app_settings = {
       FUNCTIONS_EXTENSION_VERSION = "~4"
       SCM_DO_BUILD_DURING_DEPLOYMENT = true
       FUNCTIONS_WORKER_RUNTIME                          = "dotnet-isolated"
       APPINSIGHTS_INSTRUMENTATIONKEY                    = azurerm_application_insights.application_insights.instrumentation_key
+      KEY_VAULT_NAME = random_id.kvname.hex
   }
 
   site_config {
